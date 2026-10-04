@@ -1,0 +1,45 @@
+P1 monitor (NL)
+Copyright (c) 2017 - 2026 Wil Weterings.
+
+Toestemming wordt hierbij toegekend aan elke persoon die een kopie krijgt van deze software en bijbehorende documentatiebestanden (de "Software") zonder beperking de kopieën van de software gebruiken, kopiëren, publiceren, distribueren en onder voorbehoud van de volgende voorwaarden:
+
+De hierboven vermelde auteursrechtelijke kennisgeving en deze toestemmingsbrief zullen in alle gevallen opgenomen worden kopieën of substantiële delen van de software.
+
+De software moet gratis worden verstrekt. Toestemming wordt verleend verspreiding samen met, maar niet als een wezenlijk onderdeel van, tijdschriften, software compilaties of hardware producten.
+
+Afgeleide licenties mogen deze licentie niet beperken of aanpassen. 
+
+Delen van de software mogen niet worden gebruikt in andere projecten zonder toestemming.
+
+DE SOFTWARE IS GELEVERD “ZOALS”, ZONDER GARANTIE VAN ENIGE SOORT, INCLUSIEF MAAR NIET BEPERKT OP DE GARANTIES VAN VERKOOPBAARHEID, GESCHIKTHEID VOOR EEN BEPAALD DOEL. IN GEEN GEVAL ZAL HET AUTEURS OF COPYRIGHT HOLDERS AANSPRAKELIJK ZIJN VOOR ENIGE EISEN, SCHADE OF ANDERE AANSPRAKELIJKHEID IN VERBAND MET DE SOFTWARE OF HET GEBRUIK VAN DE SOFTWARE.
+
+P1 monitor (UK)
+Copyright (c) 2017 - 2026 Wil Weterings.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, publish, and distribute copies of the Software without restriction, subject to the following conditions:
+
+The above copyright notice and this permission letter shall be included in all copies or substantial portions of the Software.
+
+The Software must be distributed free of charge. Permission is granted for distribution together with, but not as a substantial part of, magazines, software compilations, or hardware products.
+
+Derivative licenses may not restrict or modify this License.
+
+Parts of the Software may not be used in other projects without permission.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY IN CONNECTION WITH THE SOFTWARE OR THE USE OF THE SOFTWARE.
+
+
+Moniteur P1(FR)
+Copyright (c) 2017 - 2026 Wil Weterings.
+
+Par la présente, la permission est accordée, gratuitement, à toute personne obtenant une copie de ce logiciel et des fichiers de documentation associés (le « Logiciel »), d'utiliser, de copier, de publier et de distribuer des copies du Logiciel sans restriction, sous réserve des conditions suivantes :
+
+L'avis de droit d'auteur ci-dessus et cette lettre d'autorisation doivent être inclus dans toutes les copies ou parties substantielles du logiciel.
+
+Le logiciel doit être fourni gratuitement. L'autorisation est accordée de distribuer avec, mais pas en tant que partie substantielle de, des magazines, des compilations de logiciels ou des produits matériels.
+
+Les licences dérivées ne peuvent pas limiter ou modifier cette Licence.
+
+Certaines parties du logiciel ne peuvent pas être utilisées dans d’autres projets sans autorisation.
+
+LE LOGICIEL EST FOURNI « TEL QUEL », SANS GARANTIE D'AUCUNE SORTE, Y COMPRIS, MAIS SANS S'Y LIMITER, LES GARANTIES DE QUALITÉ MARCHANDE ET D'ADÉQUATION À UN USAGE PARTICULIER. EN AUCUN CAS, LES AUTEURS OU LES TITULAIRES DES DROITS D'AUTEUR NE SERONT RESPONSABLES DE TOUTE RÉCLAMATION, DOMMAGE OU AUTRE RESPONSABILITÉ EN RELATION AVEC LE LOGICIEL OU L'UTILISATION DU LOGICIEL.

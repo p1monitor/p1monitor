@@ -1,0 +1,451 @@
+<?php
+include_once '/p1mon/www/util/page_header.php';
+include_once '/p1mon/www/util/p1mon-util.php';  
+include_once '/p1mon/www/util/page_menu_header_watermeter.php'; 
+include_once '/p1mon/www/util/page_menu.php';
+include_once '/p1mon/www/util/check_display_is_active.php';
+include_once '/p1mon/www/util/weather_info.php';
+include_once '/p1mon/www/util/pageclock.php';
+include_once '/p1mon/www/util/fullscreen.php';
+include_once '/p1mon/www/util/highchart.php';
+
+if ( checkDisplayIsActive( 102 ) == false) { return; }
+?>
+<!doctype html>
+<html lang="<?php echo strIdx( 370 )?>">
+<head>
+<meta name="robots" content="noindex">
+<title>P1-monitor <?php echo strIdx( 445 )?></title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+<link type="text/css" rel="stylesheet" href="./css/p1mon.css">
+<link type="text/css" rel="stylesheet" href="./font/roboto/roboto.css">
+
+<script defer src="./font/awsome/js/all.js"></script>
+<script src="./js/jquery.min.js"></script>
+<script src="./js/highstock-link/highstock.js"></script>
+<script src="./js/highstock-link/highcharts-more.js"></script>
+<script src="./js/highstock-link/modules/accessibility.js"></script>
+<script src="./js/hc-global-options.js"></script>
+<script src="./js/p1mon-util.js"></script>
+
+<script>
+const text_months   = "<?php echo strIdx( 123 );?>"
+const text_year     = "<?php echo strIdx( 132 );?>"
+const text_years    = "<?php echo strIdx( 124 );?>"
+const text_puls         = "<?php echo strIdx( 440 );?>"
+const text_digital      = "<?php echo strIdx( 772 );?>"
+
+var recordsLoaded       = 0;
+var initloadtimer;
+var mins                = 1;  
+var secs                = mins * 60;
+var currentSeconds      = 0;
+var currentMinutes      = 0;
+var Gselected           = 0;
+var GselectText         = ['6 '+text_months, '1 '+text_year, '2 '+text_years ,'5 '+text_years ]; // #PARAMETER
+var GseriesVisibilty    = [true, true];
+var GDataPuls           = [];
+var GDataDigital1       = [];
+var maxDataIsOn         = false
+var maxDataText         = ['MAX. data','MIN. data']
+var maxDataCount        = [ 36000, 366 ]
+var maxrecords          = maxDataCount[1];
+
+function readJsonApiHistoryMonth( cnt ){ 
+
+    // Puls values
+    $.getScript( "/api/v2/watermeterdigital/month/1?limit=" + cnt, function( data, textStatus, jqxhr ) {
+      try {
+        var jsondata = JSON.parse(data); 
+        var item;
+        recordsLoaded      = jsondata.length;
+        GDataPuls.length   = 0;
+        
+        for (var j = jsondata.length; j > 0; j--){    
+            item    = jsondata[ j-1 ];
+            item[1] = item[1] * 1000; // highchart likes millisecs.
+            GDataPuls.push ( [item[1], item[4] ]);
+        }  
+        updateData();
+      } catch(err) {}
+   });
+
+   // digital values
+   $.getScript( "/api/v2/watermeterdigital/month/2?limit=" + cnt, function( data, textStatus, jqxhr ) {
+      try {
+        var jsondata = JSON.parse(data); 
+        var item;
+        recordsLoaded       = jsondata.length;
+        GDataDigital1.length   = 0;
+        
+        for (var j = jsondata.length; j > 0; j--){    
+            item    = jsondata[ j-1 ];
+            item[1] = item[1] * 1000; // highchart likes millisecs.
+            GDataDigital1.push ( [item[1], item[4] ]);
+        }  
+        updateData();
+      } catch(err) {}
+   });
+
+}
+
+
+/* preload */
+//readJsonApiHistoryMonth( maxrecords );
+
+// change items with the marker #PARAMETER
+function createWaterUsageChart() {
+    Highcharts.stockChart('WaterUsageChart', {
+        chart: {
+            style: {
+                fontFamily: 'robotomedium',
+                fontSize: '14px'
+            },
+            backgroundColor: '#ffffff',
+            renderTo: 'container',
+            type: 'column',
+            borderWidth: 0
+            },
+            plotOptions :{
+                series :{
+                    stacking: 'normal',
+                    showInNavigator: true,
+                    events: {
+                        legendItemClick: function (event) {
+                            if  ( this.index === 0 ) {
+                                toLocalStorage('watermeter-m-verbr-pulse-visible',this.visible);  // #PARAMETER
+                            }
+                            if  ( this.index === 1 ) {
+                                toLocalStorage('watermeter-m-verbr-digital1-visible',this.visible);  // #PARAMETER
+                            }
+                        }
+                    }
+                }
+            },
+            legend: {
+                y: -38,
+                symbolHeight: 12,
+                symbolWidth: 12,
+                symbolRadius: 3,
+                borderRadius: 5,
+                borderWidth: 1,
+                backgroundColor: '#DCE1E3',
+                symbolPadding: 3,
+                enabled: true,
+                align: 'right',
+                verticalAlign: 'top',
+                layout: 'horizontal',
+                floating: true,
+                itemStyle: {
+                    color: '#6E797C'
+                },
+                itemHoverStyle: {
+                    color: '#10D0E7'
+                },
+                itemDistance: 5
+            },
+            exporting: { enabled: false },
+            rangeSelector: {
+                inputEnabled: false,
+                buttonSpacing: 5, 
+                selected : Gselected,
+                buttons: [
+
+                {
+                    text: "-",
+                    events: {
+                        click: function () {
+
+                            maxDataIsOn = !maxDataIsOn;
+                            setHCButtonText( $('#WaterUsageChart').highcharts().rangeSelector.buttons[0], maxDataText, maxDataIsOn );
+
+                            if ( maxDataIsOn == true ) {
+                                maxrecords = maxDataCount[0]
+                            } else {
+                                maxrecords = maxDataCount[1]
+                            }
+
+                            readJsonApiHistoryMonth( maxrecords );
+                            toLocalStorage('watermeter-m-max-data-on',maxDataIsOn );  // #PARAMETER
+                            return false
+                        }
+                    }
+                },
+
+
+                {
+                    type: 'month',   // #PARAMETER
+                    count: 6,        // #PARAMETER
+                    text: GselectText[0]
+                },{
+                    type: 'year',   // #PARAMETER
+                    count: 1,       // #PARAMETER
+                    text: GselectText[1]
+                },{
+                    type: 'year',   // #PARAMETER
+                    count: 2,       // #PARAMETER
+                    text: GselectText[2]
+                }, {
+                    type: 'year',  // #PARAMETER
+                    count: 5,      // #PARAMETER
+                    text: GselectText[3]
+                }],
+                buttonTheme: { 
+                    r: 3,
+                    fill: '#F5F5F5',
+                    stroke: '#DCE1E3',
+                    'stroke-width': 1,
+                    width: 65,
+                    style: {
+                        color: '#6E797C',
+                        fontWeight: 'normal'
+                    },
+                states: {
+                    hover: {
+                        fill: '#F5F5F5',
+                        style: {
+                            color: '#10D0E7'
+                        }
+                    },
+                    select: {
+                        fill: '#DCE1E3',
+                        stroke: '#DCE1E3',
+                        'stroke-width': 1,
+                        style: {
+                            color: '#384042',
+                            fontWeight: 'normal'
+                        }
+                    }
+                }
+                }  
+            },
+            xAxis: {
+            events: {
+                setExtremes: function(e) {      
+                    if(typeof(e.rangeSelectorButton)!== 'undefined') {
+                        for (var j = 0;  j < GselectText.length; j++){    
+                            if ( GselectText[j] == e.rangeSelectorButton.text ) {
+                                toLocalStorage('watermeter-m-select-index',j+1); // PARAMETER
+                                break;
+                            }
+                        }
+                    }
+                }
+            },   
+            minTickInterval:       30 * 24 * 3600000,  // PARAMETER
+            range:           60  * 30 * 24 * 3600000,  // PARAMETER
+            minRange:        6   * 30 * 24 * 3600000,  // PARAMETER
+            maxRange:        120 * 30 * 24 * 3600000,  // PARAMETER
+            type: 'datetime',
+            dateTimeLabelFormats: {
+                minute: '%H:%M',
+                hour: '%H:%M',
+                day: "%a.<br>%e %b.",
+                month: '%b.<br>%Y',
+                year: '%Y'
+            },
+            lineColor: '#6E797C',
+            lineWidth: 1
+            },
+            yAxis: {
+                gridLineColor: '#6E797C',
+                gridLineDashStyle: 'longdash',
+                lineWidth: 0,
+                offset: 0,
+                opposite: false,
+                labels: {
+                    useHTML: true,
+                    format: '{value}&nbsp;L',
+                    style: {
+                        color: '#6E797C'
+                    },
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#6E797C'
+                }]
+            },
+            tooltip: {
+                useHTML: false,
+                style: {
+                    padding: 3,
+                    color: '#6E797C'
+                },
+                formatter: function() {
+                    //var s = '<b>'+ Highcharts.dateFormat('%A, %Y-%m-%d %H:%M', this.x) +'</b>';
+                    var s = '<b>'+ Highcharts.dateFormat('%B, %Y', this.x) +'</b>';
+                    var d = this.points;
+                    var d           = this.points;
+                    var PulsValue = Digital1Value = 0;
+                   
+                    for (var i=0,  tot=d.length; i<tot; i++) {
+                        if  ( d[i].series.userOptions.id === text_puls) {
+                            PulsValue =  d[i].y
+                        }
+                        if  ( d[i].series.userOptions.id === text_digital) {
+                            Digital1Value = d[i].y
+                        }
+                    }
+                
+                    if ( $('#WaterUsageChart').highcharts().series[0].visible === true ) {
+                        s += '<br/><span style="color: #6699ff;"><?php echo strIdx( 354 );?>:&nbsp;</span>' + text_puls + ' (' + (parseFloat(PulsValue)/1000).toFixed(3) + " m<sup>3</sup>) <?php echo strIdx( 220 );?>";
+                    }
+
+                    if ( $('#WaterUsageChart').highcharts().series[1].visible === true ) {
+                        s += '<br/><span style="color: #1547aa;"><?php echo strIdx( 354 );?>:&nbsp;</span>' + text_digital + ' (' + (parseFloat(Digital1Value)/1000).toFixed(3) + " m<sup>3</sup>) <?php echo strIdx( 220 );?>";
+                    }
+                   
+                    return s;
+                },
+            backgroundColor: '#F5F5F5',
+            borderColor: '#DCE1E3',
+            crosshairs: [true, true],
+            borderWidth: 1
+            },  
+                      
+            navigator: {
+                xAxis: {
+                    dateTimeLabelFormats: {
+                        second: '%H:%M:%S',
+                        minute: '%H:%M',
+                        hour: '%H:%M',
+                        day: '%B<br/>%Y',
+                        month: '%B<br/>%Y',
+                        year: '%Y'
+                    }
+                },
+                enabled: true,
+                outlineColor: '#384042',
+                outlineWidth: 1,
+                handles: {
+                    backgroundColor: '#384042',
+                    borderColor: '#6E797C',
+                }
+            },
+            series: [ 
+            {
+                id: text_puls, // used in tooltip!
+                visible: GseriesVisibilty[0],
+                name: text_puls,
+                color: '#6699ff',
+                data: GDataPuls 
+            }, 
+            {
+                id: text_digital, // used in tooltip!
+                visible: GseriesVisibilty[1],
+                name: text_digital,
+                color: '#1547aa',
+                data: GDataDigital1 
+            } 
+            ],
+
+            lang: {
+                noData: "<?php echo ucfirst(strIdx( 425 ))?>"
+            },
+            noData: {
+                style: { 
+                    fontFamily: 'robotomedium',
+                    fontWeight: 'bold',
+                    fontSize: '25px',
+                    color: '#10D0E7'
+                }
+            }
+  });
+  // can only set text when chart is made.
+  setHCButtonText( $('#WaterUsageChart').highcharts().rangeSelector.buttons[0], maxDataText, maxDataIsOn );
+}
+
+function updateData() {
+    //console.log("updateData()");
+    var chart = $('#WaterUsageChart').highcharts();
+    if( typeof(chart) !== 'undefined') {
+        chart.series[0].setData( GverbrData );
+    }
+}
+
+function DataLoop() {
+    currentMinutes = Math.floor(secs / 60);
+    currentSeconds = secs % 60;
+    if(currentSeconds <= 9) { currentSeconds = "0" + currentSeconds; }
+    secs--;
+    document.getElementById("timerText").innerHTML = zeroPad(currentMinutes,2) + ":" + zeroPad(currentSeconds,2);
+    if(secs < 0 ) { 
+        mins = 1;  
+        secs = mins * 60;
+        currentSeconds = 0;
+        currentMinutes = 0;
+        colorFader("#timerText","#0C7DAD");
+        readJsonApiHistoryMonth( maxrecords );
+    }
+    // make chart only once and when we have data.
+    if (recordsLoaded !== 0 &&  $('#WaterUsageChart').highcharts() == null) {
+      hideStuff('loading-data');
+      createWaterUsageChart();
+    }
+    setTimeout('DataLoop()',1000);
+}
+
+$(function() {
+    toLocalStorage('watermeter-menu',window.location.pathname);
+    Gselected = parseInt( getLocalStorage('watermeter-m-select-index'), 10 );
+    maxDataIsOn = JSON.parse(getLocalStorage('watermeter-m-max-data-on'));                      // #PARAMETER
+    GseriesVisibilty[0] =JSON.parse( getLocalStorage('watermeter-m-verbr-pulse-visible') );     // #PARAMETER
+    GseriesVisibilty[1] =JSON.parse( getLocalStorage('watermeter-m-verbr-digital1-visible') ); // #PARAMETER
+    
+
+    if ( (maxDataIsOn == null) || (maxDataIsOn == false) ) {
+        maxDataIsOn = false;
+        maxrecords = maxDataCount[1]
+    } else {
+        maxrecords = maxDataCount[0]
+    }
+
+    Highcharts.setOptions({
+        global: {
+            useUTC: false
+        },
+        lang: <?php hc_language_json();?>
+    });
+
+    secs = 0;
+    screenSaver( <?php echo config_read(79);?> ); // to enable screensaver for this screen.
+    DataLoop();
+});
+
+</script>
+</head>
+<body>
+
+<?php page_header();?>
+
+<div class="top-wrapper-2">
+    <div class="content-wrapper pad-13">
+       <!-- header 2 -->
+       <?php pageclock(); ?>
+       <?php page_menu_header_watermeter( 2 ); ?>
+       <?php weather_info(); ?>
+    </div>
+</div>
+
+<div class="mid-section">
+    <div class="left-wrapper">
+        <?php page_menu(9); ?>
+        <div id="timerText" class="pos-8 color-timer"></div>
+        <?php fullscreen(); ?>
+    </div> 
+    <div class="mid-content-2 pad-13">
+    <!-- links -->
+        <div class="frame-2-top">
+            <span class="text-2"><?php echo strIdx( 446 );?></span>
+        </div>
+        <div class="frame-2-bot"> 
+        <div id="WaterUsageChart" style="width:100%; height:480px;"></div>
+        </div>
+</div>
+</div>
+<div id="loading-data"><img src="./img/ajax-loader.gif" alt="<?php echo strIdx( 295 );?>" height="15" width="128"></div>
+
+</body>
+</html>
